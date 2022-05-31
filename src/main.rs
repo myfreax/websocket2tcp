@@ -20,8 +20,8 @@ async fn main() -> Result<(), Error> {
 
   // Only Accept One Websocket Client Connection
   let (ws_server, _) = ws_listener.accept().await.unwrap();
-  // let addr = ws_server.peer_addr().unwrap();
-  // info!("Accepted Client Connection {}", addr);
+  let addr = ws_server.peer_addr().unwrap();
+  info!("Accepted Client Connection {}", addr);
   let ws_stream = tokio_tungstenite::accept_async(ws_server).await.unwrap();
   let (mut ws_writer, mut ws_reader) = ws_stream.split();
 
@@ -32,7 +32,9 @@ async fn main() -> Result<(), Error> {
     loop {
       let len = tcp_reader.read(&mut buffer).await.unwrap();
       if len > 0 {
-        let msg = Message::Binary(buffer[0..len].to_vec());
+        let recv_buffer = &buffer[0..len];
+        let recv_vec: Vec<u8> = recv_buffer.to_vec();
+        let msg = Message::Binary(recv_vec);
         ws_writer.send(msg).await.unwrap();
         info!(
           "TCP Client Received: {}",
